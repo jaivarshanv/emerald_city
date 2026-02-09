@@ -2,132 +2,119 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Emerald City: Spellbound | IEEE-CS VIT</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica+SC&family=Pirata+One&display=swap');
         
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         @media (min-width: 769px) {
             * { cursor: none !important; }
         }
 
         body { 
-            background-color: #010103; margin: 0; display: flex; 
-            flex-direction: column; justify-content: center; align-items: center; 
-            min-height: 100vh; font-family: 'IM Fell DW Pica SC', serif; overflow: hidden; 
-            transition: background-color 2s;
+            background-color: #010103; margin: 0; 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            min-height: 100vh; font-family: 'IM Fell DW Pica SC', serif; 
+            overflow: hidden; 
         }
         
+        /* PERSISTENT STORM LAYER */
         canvas#storm-canvas { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            z-index: 1; pointer-events: none; 
+            z-index: 5; pointer-events: none; 
         }
 
         #game-header {
             position: fixed; top: 20px; width: 100%;
-            font-family: 'IM Fell DW Pica SC', serif; font-size: clamp(1.8rem, 5vw, 4rem); 
+            font-family: 'IM Fell DW Pica SC', serif; font-size: clamp(1.5rem, 5vw, 3.5rem); 
             color: #d4af37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5), 3px 3px 5px #000;
             z-index: 100; display: none; text-align: center;
-            letter-spacing: 6px; text-transform: uppercase;
+            letter-spacing: 4px; text-transform: uppercase;
         }
 
+        /* ELDER WAND */
         #wand-anchor { 
             position: fixed; top: 0; left: 0; pointer-events: none; 
-            z-index: 9999; transform-origin: 300px 6px; display: flex; align-items: center; 
+            z-index: 9999; transform-origin: 300px 6px; display: none; align-items: center; 
         }
+        @media (min-width: 769px) { #wand-anchor { display: flex; } }
         .wand-body { height: 12px; width: 300px; background: linear-gradient(90deg, #1a0f08, #3d2b1f, #2a1b0e); border-radius: 6px; position: relative; }
-        .elder-node { position: absolute; height: 24px; width: 24px; background: radial-gradient(circle at 30% 30%, #4d3626, #1a0f08); border-radius: 50%; top: -6px; }
-        .n1 { right: 30px; } .n2 { right: 90px; } .n3 { right: 150px; } .n4 { right: 210px; } .n5 { right: 270px; }
-        .wand-tip { 
-            position: absolute; right: -5px; top: -1px; width: 14px; height: 14px; 
-            background: #fff; border-radius: 50%; 
-            box-shadow: 0 0 25px 10px #d4af37, 0 0 50px 20px #fff;
-        }
+        .wand-tip { position: absolute; right: -5px; top: -1px; width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 0 25px 10px #d4af37, 0 0 50px 20px #fff; }
 
+        /* OVERLAYS & CONTAINERS */
         #intro-overlay { 
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.85); z-index: 10; display: flex; 
-            flex-direction: column; justify-content: center; align-items: center; 
-            padding: 40px; text-align: center;
+            background: rgba(0, 0, 0, 0.9); z-index: 1000; 
+            display: flex; flex-direction: column; 
+            justify-content: center; align-items: center; 
+            padding: 30px; text-align: center;
         }
 
         #passage-text { 
-            color: #d4af37; font-family: 'IM Fell DW Pica SC'; font-size: clamp(1.1rem, 2.5vw, 1.8rem); 
-            margin-bottom: 40px; max-width: 850px; line-height: 1.6; 
-            opacity: 0; transition: opacity 2s; position: relative; z-index: 20;
+            color: #d4af37; font-size: clamp(1.1rem, 3vw, 1.8rem); 
+            max-width: 850px; line-height: 1.6; margin-bottom: 40px;
+            opacity: 0; transition: opacity 2s;
         }
 
-        .btn-container { display: flex; flex-direction: column; align-items: center; width: 100%; position: relative; z-index: 20; }
+        .btn-container { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
         
         .start-ui-btn, .btn { 
             background: #2a1b0e; color: #f4e4bc; border: 2px solid #d4af37; 
-            padding: 18px 35px; font-family: 'IM Fell DW Pica SC'; font-size: 1.5rem; 
-            cursor: pointer !important; transition: 0.4s;
-            letter-spacing: 2px; margin: 15px; width: min(90%, 350px); pointer-events: auto;
+            padding: clamp(12px, 2vh, 20px) 30px; font-family: 'IM Fell DW Pica SC'; 
+            font-size: clamp(1.1rem, 4vw, 1.5rem); cursor: pointer !important; transition: 0.3s;
+            width: min(90%, 380px); z-index: 1001;
         }
-        .start-ui-btn:hover, .btn:hover { background: #004d26; color: #fff; box-shadow: 0 0 30px #50c878; transform: scale(1.05); }
+        .start-ui-btn:hover, .btn:hover { background: #004d26; box-shadow: 0 0 20px #50c878; transform: scale(1.02); }
 
-        #envelope-wrapper { display: none; z-index: 50; opacity: 0; transition: opacity 1.5s; cursor: pointer !important; position: relative; }
+        #envelope-wrapper { display: none; z-index: 50; opacity: 0; transition: opacity 1.5s; cursor: pointer !important; }
         
         #main-container { 
-            display: none; width: 95%; max-width: 900px; 
+            display: none; width: 95%; max-width: 850px; 
             background: #f4e4bc url('https://www.transparenttextures.com/patterns/paper-fibers.png'); 
-            padding: clamp(20px, 5vw, 60px); border: 4px solid #d4af37; 
-            box-shadow: 0 0 150px rgba(0,0,0,1); text-align: center; 
-            z-index: 60; position: relative; margin-top: 60px; transition: opacity 1s;
+            padding: clamp(30px, 8vw, 60px) 20px; border: 4px solid #d4af37; 
+            box-shadow: 0 0 100px rgba(0,0,0,1); text-align: center; 
+            z-index: 60; position: relative; margin-top: 40px;
         }
 
-        /* ANIMATED SORTING HAT */
+        /* SORTING HAT */
         #sorting-hat-img {
-            position: absolute;
-            top: -70px;
-            left: -90px;
-            width: 200px;
-            z-index: 70;
-            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            position: absolute; top: -100px; left: 100%; transform: translateX(-50%);
+            width: 200px; z-index: 70;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5));
             animation: hatTalk 3s infinite ease-in-out, hatFloat 5s infinite ease-in-out;
         }
+        @keyframes hatTalk { 0%, 100% { transform: translateX(-50%) scale(1, 1); } 50% { transform: translateX(-50%) scale(1.05, 0.95); } }
+        @keyframes hatFloat { 0%, 100% { margin-top: 0; } 50% { margin-top: -15px; } }
 
-        @keyframes hatTalk {
-            0%, 100% { transform: scale(1, 1) rotate(0deg); }
-            50% { transform: scale(1.05, 0.95) rotate(-2deg); }
-        }
-        @keyframes hatFloat {
-            0%, 100% { top: -60px; }
-            50% { top: -75px; }
-        }
-
-        #replay-container {
-            display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 20px;
-            position: relative;
-        }
+        /* REPLAY & BUBBLE */
+        #replay-header { display: flex; align-items: center; gap: 10px; margin-top: 50px; margin-bottom: 20px; }
         #hat-bubble { 
             background: white; padding: 15px; border: 3px solid #3b2a1a; 
-            border-radius: 12px; font-weight: bold; color: #5d0000; 
-            flex-grow: 1; font-size: 1.2rem; margin-left: 80px; /* Space for the hat */
+            border-radius: 12px; font-weight: bold; color: #5d0000; flex-grow: 1;
+            font-size: clamp(0.9rem, 3.5vw, 1.2rem);
         }
         .replay-btn {
             background: #d4af37; color: #1a0f08; border: 2px solid #1a0f08;
             border-radius: 50%; width: 45px; height: 45px; display: flex;
             align-items: center; justify-content: center; cursor: pointer !important;
-            transition: 0.3s; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 1.5rem; transition: 0.3s;
         }
-        .replay-btn:hover { transform: rotate(-45deg) scale(1.1); background: #f4e4bc; }
+        .replay-btn:hover { background: #f4e4bc; transform: rotate(-45deg); }
 
-        .btn { width: 100%; margin-top: 15px; }
+        #q-text { font-size: clamp(1.2rem, 5vw, 1.8rem); line-height: 1.4; color: #1a0f08; margin-bottom: 25px; }
         .hidden { display: none; }
-        .fade-mischief { opacity: 0 !important; transform: scale(0.9); pointer-events: none; }
+        .fade-out { opacity: 0 !important; transition: opacity 1s; }
 
-        @media (max-width: 768px) { 
-            #wand-anchor { display: none; } 
-            #sorting-hat-img { width: 100px; left: -20px; top: -50px; }
-            #hat-bubble { margin-left: 60px; }
+        @media (max-width: 768px) {
+            #sorting-hat-img { width: 130px; top: -70px; }
+            #main-container { margin-top: 60px; padding-top: 40px; }
         }
     </style>
 </head>
-<body>
+<body onclick="startExperience()">
 
 <canvas id="storm-canvas"></canvas>
 
@@ -137,7 +124,7 @@
     </div>
     <div class="btn-container">
         <button class="start-ui-btn" id="hear-btn" onclick="startExperience()">HEAR THE WARNING</button>
-        <button class="start-ui-btn" style="border-color: #555; color: #888;" onclick="skipToMap()">SKIP TO MAP</button>
+        <button class="start-ui-btn" style="border-color: #555; color: #888; font-size: 1.1rem;" onclick="skipToMap()">SKIP TO MAP</button>
     </div>
 </div>
 
@@ -149,46 +136,40 @@
 <audio id="thunder-sound" src="thunder.mp3"></audio>
 
 <div id="wand-anchor">
-    <div class="wand-body">
-        <div class="elder-node n1"></div><div class="elder-node n2"></div>
-        <div class="elder-node n3"></div><div class="elder-node n4"></div>
-        <div class="elder-node n5"></div>
-        <div class="wand-tip"></div>
-    </div>
+    <div class="wand-body"><div class="wand-tip"></div></div>
 </div>
 
 <div id="envelope-wrapper" onclick="openLetter()">
     <div class="btn-container">
-        <div style="width: min(90vw, 550px); height: min(60vw, 350px); background: #e4d5b7; position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; box-shadow: 0 40px 120px #000;">
-            <div style="position: absolute; top: 0; width: 0; height: 0; border-left: min(45vw, 275px) solid transparent; border-right: min(45vw, 275px) solid transparent; border-top: min(30vw, 200px) solid #d4c3a1;"></div>
-            <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background: #8b0000; border-radius: 50%; border: 4px solid #3a0000; color: #d4af37; display: flex; align-items: center; justify-content: center; font-family: 'Pirata One'; font-size: 1.5rem;">IEEE-CS</div>
-            <p style="color: #5d4a37; font-weight: bold; font-size: 1rem; letter-spacing: 2px;">OPEN THE SEAL</p>
+        <div style="width: min(90vw, 450px); height: 280px; background: #e4d5b7; position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; box-shadow: 0 40px 80px #000;">
+            <div style="position: absolute; top: 0; width: 0; height: 0; border-left: min(45vw, 225px) solid transparent; border-right: min(45vw, 225px) solid transparent; border-top: 160px solid #d4c3a1;"></div>
+            <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: 90px; height: 90px; background: #8b0000; border-radius: 50%; border: 4px solid #3a0000; color: #d4af37; display: flex; align-items: center; justify-content: center; font-family: 'Pirata One'; font-size: 1.2rem;">IEEE-CS</div>
+            <p style="color: #5d4a37; font-weight: bold;">OPEN THE SEAL</p>
         </div>
     </div>
 </div>
 
 <div id="main-container">
     <img id="sorting-hat-img" src="sorting hat.png" alt="Sorting Hat">
-    
     <div id="quiz-ui">
-        <div id="replay-container">
+        <div id="replay-header">
             <div id="hat-bubble">"Prove you are a wizard of VIT, or be gone."</div>
-            <button class="replay-btn" onclick="replayAudio()" title="Replay Riddle">↺</button>
+            <button class="replay-btn" onclick="replayAudio()">↺</button>
         </div>
-        <p id="q-text" style="font-size: 1.6rem; line-height: 1.4; margin-bottom: 20px; color: #1a0f08;"></p>
+        <p id="q-text"></p>
         <div id="options" class="btn-container"></div>
     </div>
     <div id="result-ui" class="hidden">
-        <h1 style="color: #50c878; text-shadow: 0 0 20px #50c878; font-size: 3rem;">MISCHIEF MANAGED!</h1>
+        <h1 style="color: #50c878; text-shadow: 0 0 20px #50c878; font-size: clamp(1.8rem, 6vw, 3rem);">MISCHIEF MANAGED!</h1>
         <p>The Portkey is activating...</p>
     </div>
 </div>
 
 <script>
     const questions = [
-        { q: "A vast amphitheater where the voices resound... Named for the great leader who mastered the art of the word...", ans: "Anna Auditorium", audio: "annaaudi.mp3", distractors: ["CS Hall", "ChannaReddy Auditorium"] },
-        { q: "A silent cathedral of parchment and ink... Guarded by turnstiles that demand a digital key...", ans: "EVR Central Library", audio: "library.mp3", distractors: ["Library", "StudyHalls"] },
-        { q: "The final boundary where the sentinels stand, between our sanctuary and the Muggle land...", ans: "Main Gate", audio: "maingate.mp3", distractors: ["SJT Back Gate", "Hostel Gates"] },
+        { q: "A vast amphitheater where the voices resound... Named for the great leader who mastered the art of the word...", ans: "Anna Auditorium", audio: "annaaudi.mp3", distractors: ["ChannaReddy Auditorium", "CS Hall"] },
+        { q: "A silent cathedral of parchment and ink... Guarded by turnstiles that demand a digital key...", ans: "EVR Central Library", audio: "library.mp3", distractors: ["Library", "Study Hall"] },
+        { q: "The final boundary where the sentinels stand, between our sanctuary and the Muggle land...", ans: "Main Gate", audio: "maingate.mp3", distractors: ["SJT Back Gate", "Main Tunnel"] },
         { q: "Beneath the hall where champions sweat... lies a subterranean vault hidden from the light.", ans: "All-Mart", audio: "ALLmart.mp3", distractors: ["Enzo", "Foodys"] }
     ];
 
@@ -203,16 +184,16 @@
     let lastMockIndex = -1;
     let magicStarted = false;
     const openingVoice = document.getElementById('opening-voice');
-    const wandAnchor = document.getElementById('wand-anchor');
+    const wand = document.getElementById('wand-anchor');
     const hatVoice = document.getElementById('hat-voice');
     const thunder = document.getElementById('thunder-sound');
 
+    // Wand Logic
     document.addEventListener('mousemove', (e) => {
         if(window.innerWidth > 768) {
-            wandAnchor.style.left = (e.clientX - 300) + 'px'; 
-            wandAnchor.style.top = (e.clientY - 6) + 'px';
+            wand.style.left = (e.clientX - 300) + 'px'; wand.style.top = (e.clientY - 6) + 'px';
             const angle = Math.atan2(e.clientY - window.innerHeight / 2, e.clientX - window.innerWidth / 2);
-            wandAnchor.style.transform = `rotate(${angle}rad)`;
+            wand.style.transform = `rotate(${angle}rad)`;
         }
     });
 
@@ -221,8 +202,8 @@
         magicStarted = true;
         document.getElementById('hear-btn').style.display = 'none';
         document.getElementById('bg-music').volume = 0.25;
-        document.getElementById('bg-music').play();
-        openingVoice.play();
+        document.getElementById('bg-music').play().catch(()=>{});
+        openingVoice.play().catch(()=>{});
         document.getElementById('passage-text').style.opacity = '1';
         openingVoice.onended = transitionToEnvelope;
     }
@@ -230,22 +211,18 @@
     function skipToMap() {
         if (magicStarted) openingVoice.pause();
         magicStarted = true;
-        document.getElementById('bg-music').volume = 0.25;
-        document.getElementById('bg-music').play();
+        document.getElementById('bg-music').play().catch(()=>{});
         transitionToEnvelope();
     }
 
     function transitionToEnvelope() {
-        document.getElementById('intro-overlay').style.opacity = '0';
+        document.getElementById('intro-overlay').classList.add('fade-out');
         setTimeout(() => {
             document.getElementById('intro-overlay').style.display = 'none';
             document.getElementById('game-header').style.display = 'block';
             document.getElementById('envelope-wrapper').style.display = 'block';
-            setTimeout(() => { 
-                document.getElementById('game-header').style.opacity = '1';
-                document.getElementById('envelope-wrapper').style.opacity = '1'; 
-            }, 50);
-        }, 800);
+            setTimeout(() => { document.getElementById('envelope-wrapper').style.opacity = '1'; }, 50);
+        }, 1000);
     }
 
     function openLetter() {
@@ -255,49 +232,41 @@
     }
 
     function replayAudio() {
-        hatVoice.pause();
-        hatVoice.currentTime = 0;
-        hatVoice.play();
+        hatVoice.pause(); hatVoice.currentTime = 0; hatVoice.play().catch(()=>{});
     }
 
     function showQuestion() {
-        document.getElementById('main-container').style.opacity = '0';
-        setTimeout(() => {
-            const qData = questions[currentStep];
-            document.getElementById('q-text').innerText = qData.q;
-            hatVoice.src = qData.audio;
-            hatVoice.play();
-            const optDiv = document.getElementById('options');
-            optDiv.innerHTML = '';
-            let choices = [qData.ans, ...qData.distractors].sort(() => Math.random() - 0.5);
-            choices.forEach(choice => {
-                const b = document.createElement('button');
-                b.className = 'btn'; b.innerText = choice;
-                b.onclick = () => {
-                    hatVoice.pause();
-                    if(choice === qData.ans) {
-                        currentStep++;
-                        if(currentStep < questions.length) {
-                            document.getElementById('hat-bubble').innerText = '"Correct. Next trial..."';
-                            optDiv.innerHTML = '';
-                            setTimeout(showQuestion, 2000);
-                        } else {
-                            finishQuiz();
-                        }
+        const qData = questions[currentStep];
+        document.getElementById('q-text').innerText = qData.q;
+        hatVoice.src = qData.audio;
+        hatVoice.play().catch(()=>{});
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
+        [qData.ans, ...qData.distractors].sort(() => Math.random() - 0.5).forEach(choice => {
+            const b = document.createElement('button');
+            b.className = 'btn'; b.innerText = choice;
+            b.onclick = () => {
+                hatVoice.pause();
+                if(choice === qData.ans) {
+                    currentStep++;
+                    if(currentStep < questions.length) {
+                        document.getElementById('hat-bubble').innerText = '"Correct. Next trial..."';
+                        optDiv.innerHTML = '';
+                        setTimeout(showQuestion, 2000);
                     } else {
-                        let mockIndex;
-                        do { mockIndex = Math.floor(Math.random() * sharpMocks.length); } while (mockIndex === lastMockIndex);
-                        lastMockIndex = mockIndex;
-                        const mock = sharpMocks[mockIndex];
-                        document.getElementById('hat-bubble').innerText = `"${mock.text}"`;
-                        hatVoice.src = mock.file; 
-                        hatVoice.play();
+                        finishQuiz();
                     }
-                };
-                optDiv.appendChild(b);
-            });
-            document.getElementById('main-container').style.opacity = '1';
-        }, 500);
+                } else {
+                    let mockIdx;
+                    do { mockIdx = Math.floor(Math.random() * sharpMocks.length); } while (mockIdx === lastMockIndex);
+                    lastMockIndex = mockIdx;
+                    const mock = sharpMocks[mockIdx];
+                    document.getElementById('hat-bubble').innerText = `"${mock.text}"`;
+                    hatVoice.src = mock.file; hatVoice.play().catch(()=>{});
+                }
+            };
+            optDiv.appendChild(b);
+        });
     }
 
     function finishQuiz() {
@@ -305,39 +274,32 @@
         document.getElementById('result-ui').classList.remove('hidden');
         setTimeout(() => {
             document.body.style.backgroundColor = '#000';
-            document.getElementById('main-container').classList.add('fade-mischief');
-            document.getElementById('game-header').classList.add('fade-mischief');
-            setTimeout(() => {
-                window.location.href = "https://riviera.vit.ac.in/events/evt_f5838cb6d4de4e469b55ef9910deb062";
-            }, 2500);
+            document.getElementById('main-container').classList.add('fade-out');
+            setTimeout(() => { window.location.href = "https://riviera.vit.ac.in/events/evt_f5838cb6d4de4e469b55ef9910deb062"; }, 2500);
         }, 2000);
     }
 
+    // RAIN ENGINE
     const canvas = document.getElementById('storm-canvas');
     const ctx = canvas.getContext('2d');
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
-
-    let raindrops = [];
-    for(let i = 0; i < 150; i++) { raindrops.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*25, v: Math.random()*15+15 }); }
-    
-    function drawStorm() {
-        ctx.fillStyle = 'rgba(0,0,0,0.15)'; 
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.strokeStyle = 'rgba(174,194,224,0.4)'; ctx.lineWidth = 1;
-        raindrops.forEach(r => {
-            ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y+r.l); ctx.stroke();
-            r.y += r.v; if(r.y > canvas.height) r.y = -20;
+    let drops = [];
+    for(let i=0; i<120; i++) drops.push({x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*20, v: Math.random()*12+10});
+    function draw() {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = 'rgba(174,194,224,0.3)'; ctx.lineWidth = 1;
+        drops.forEach(d => {
+            ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x, d.y+d.l); ctx.stroke();
+            d.y += d.v; if(d.y > canvas.height) d.y = -20;
         });
-
-        if(Math.random() > 0.96) {
-            ctx.fillStyle = 'rgba(255,255,255,0.4)'; 
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            if(magicStarted) { thunder.volume = 0.3; thunder.currentTime = 0; thunder.play(); }
+        if(Math.random() > 0.97) {
+            ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            if(magicStarted) { thunder.volume = 0.2; thunder.currentTime = 0; thunder.play().catch(()=>{}); }
         }
-        requestAnimationFrame(drawStorm);
+        requestAnimationFrame(draw);
     }
-    drawStorm();
+    draw();
 </script>
 </body>
 </html>
