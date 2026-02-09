@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emerald City: Spellbound | IEEE-CS VIT</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica+SC&family=Pirata+One&display=swap');
+        
+        * { cursor: none !important; box-sizing: border-box; }
+        body { background-color: #010103; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: 'IM Fell DW Pica SC', serif; overflow: hidden; }
+        
+        canvas#storm-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
+        /* HEADER */
+        #game-header {
+            position: fixed; top: 20px; width: 90%;
+            font-family: 'IM Fell DW Pica SC', serif; font-size: clamp(1.8rem, 5vw, 4rem); 
+            color: #d4af37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.5), 3px 3px 5px #000;
+            z-index: 100; display: none; text-align: center;
+            letter-spacing: clamp(2px, 1vw, 6px); text-transform: uppercase;
+        }
+
+        /* LANDING PAGE & SUBTITLES */
+        #intro-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #000; z-index: 2000; display: flex; 
+            flex-direction: column; justify-content: center; align-items: center; padding: 20px;
+        }
+        #listen-text { 
+            color: #d4af37; font-family: 'IM Fell DW Pica SC'; font-size: clamp(1.2rem, 3vw, 2rem); 
+            text-align: center; letter-spacing: 2px; margin-bottom: 40px; min-height: 3em;
+            max-width: 800px; transition: opacity 0.5s;
+        }
+        
+        .start-ui-btn { 
+            background: transparent; color: #d4af37; border: 2px solid #d4af37; 
+            padding: 15px 30px; font-family: 'IM Fell DW Pica SC'; font-size: 1.5rem; 
+            cursor: pointer !important; transition: 0.5s; z-index: 2001;
+            letter-spacing: 2px; margin: 10px; width: 280px;
+        }
+        .start-ui-btn:hover { background: #d4af37; color: #000; box-shadow: 0 0 30px #d4af37; }
+
+        /* ELDER WAND */
+        #wand-anchor { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 1000; transform-origin: 300px 6px; display: flex; align-items: center; }
+        .wand-body { height: 12px; width: 300px; background: linear-gradient(90deg, #1a0f08, #3d2b1f, #2a1b0e); border-radius: 6px; position: relative; }
+        .elder-node { position: absolute; height: 24px; width: 24px; background: radial-gradient(circle at 30% 30%, #4d3626, #1a0f08); border-radius: 50%; top: -6px; }
+        .n1 { right: 30px; } .n2 { right: 90px; } .n3 { right: 150px; } .n4 { right: 210px; } .n5 { right: 270px; }
+        .wand-tip { position: absolute; right: -5px; top: -1px; width: 14px; height: 14px; background: #fff; border-radius: 50%; box-shadow: 0 0 25px 10px #d4af37, 0 0 50px 20px #fff; }
+
+        /* ENVELOPE & QUIZ */
+        #envelope-wrapper { display: none; z-index: 10; cursor: pointer !important; opacity: 0; transition: opacity 1.5s; }
+        .envelope { width: min(90vw, 550px); height: min(60vw, 350px); background: #e4d5b7; position: relative; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px; box-shadow: 0 40px 120px #000; }
+        .flap { position: absolute; top: 0; width: 0; height: 0; border-left: min(45vw, 275px) solid transparent; border-right: min(45vw, 275px) solid transparent; border-top: min(30vw, 200px) solid #d4c3a1; }
+        .wax-seal { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); width: clamp(60px, 15vw, 110px); height: clamp(60px, 15vw, 110px); background: #8b0000; border-radius: 50%; border: 3px solid #3a0000; color: #d4af37; display: flex; align-items: center; justify-content: center; font-family: 'Pirata One'; font-size: clamp(0.8rem, 2vw, 1.6rem); }
+        #main-container { display: none; width: 95%; max-width: 900px; background: #f4e4bc url('https://www.transparenttextures.com/patterns/paper-fibers.png'); padding: clamp(20px, 5vw, 60px); border: 4px solid #d4af37; box-shadow: 0 0 150px rgba(0,0,0,1); text-align: center; z-index: 20; position: relative; margin-top: 60px; transition: opacity 2s; }
+        #hat-bubble { background: white; padding: 15px; border: 3px solid #3b2a1a; border-radius: 12px; font-weight: bold; color: #5d0000; margin-bottom: 20px; font-size: clamp(1rem, 3vw, 1.6rem); }
+        #q-text { font-size: clamp(1.1rem, 3.5vw, 2rem); line-height: 1.4; margin-bottom: 20px; color: #1a0f08; }
+        .btn { background: #2a1b0e; color: #f4e4bc; padding: clamp(12px, 3vw, 25px); border: 2px solid #d4af37; font-family: 'IM Fell DW Pica SC'; width: 100%; margin-top: 10px; font-size: clamp(1rem, 3vw, 1.6rem); transition: 0.3s; pointer-events: auto; }
+        
+        @media (max-width: 768px) { * { cursor: auto !important; } #wand-anchor { display: none; } #game-header { top: 10px; } #main-container { margin-top: 80px; } }
+        .fade-mischief { opacity: 0 !important; pointer-events: none; }
+        .dark-bg { background-color: #000 !important; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="intro-overlay">
+    <div id="listen-text">THE TRIAL AWAITS...</div>
+    <div id="start-controls">
+        <button class="start-ui-btn" id="hear-btn" onclick="startExperience()">HEAR THE WARNING</button>
+        <button class="start-ui-btn" style="font-size: 1.1rem; border-color: #444; color: #666;" onclick="skipToMap()">SKIP TO MAP</button>
+    </div>
+</div>
+
+<h1 id="game-header">EMERALD CITY : SPELL BOUND</h1>
+<canvas id="storm-canvas"></canvas>
+
+<audio id="bg-music" loop src="hpt.mp3"></audio>
+<audio id="opening-voice" src="opening.mp3"></audio>
+<audio id="hat-voice"></audio>
+<audio id="thunder-sound" src="thunder.mp3"></audio>
+
+<div id="wand-anchor">
+    <div class="wand-body">
+        <div class="elder-node n1"></div><div class="elder-node n2"></div>
+        <div class="elder-node n3"></div><div class="elder-node n4"></div>
+        <div class="elder-node n5"></div>
+        <div class="wand-tip"></div>
+    </div>
+</div>
+
+<div id="envelope-wrapper" onclick="openLetter()">
+    <div class="envelope">
+        <div class="flap"></div>
+        <div class="wax-seal">IEEE-CS</div>
+        <p style="color: #5d4a37; font-weight: bold; font-size: 1rem; letter-spacing: 2px;">OPEN THE SEAL</p>
+    </div>
+</div>
+
+<div id="main-container">
+    <div id="hat-bubble">"Prove you are a wizard of VIT, or be gone."</div>
+    <div id="quiz-ui">
+        <p id="q-text"></p>
+        <div id="options"></div>
+    </div>
+    <div id="result-ui" class="hidden">
+        <h1 style="color: #006400; font-size: clamp(1.8rem, 5vw, 3.5rem); letter-spacing: 4px;">MISCHIEF MANAGED!</h1>
+        <p style="font-size: clamp(1rem, 3vw, 1.8rem);">Portkey Activating...</p>
+    </div>
+</div>
+
+<script>
+    // Subtitle Timings (Adjust the 'time' in seconds to match your recording)
+    const subtitles = [
+        { time: 0.5, text: "Halt traveler..." },
+        { time: 2.5, text: "Entry to the Emerald City is earned, not given." },
+        { time: 6.0, text: "Within this letter lies a trial of wit." },
+        { time: 9.0, text: "Prove you know these halls as well as the ghosts that haunt them..." },
+        { time: 13.0, text: "Or the gates remain shut." },
+        { time: 16.0, text: "Open the seal, answer the Hat..." },
+        { time: 19.5, text: "And pray your logic is sharper than his tongue." },
+        { time: 23.0, text: "Mischief Managed." }
+    ];
+
+    let magicStarted = false;
+    const openingVoice = document.getElementById('opening-voice');
+    const listenText = document.getElementById('listen-text');
+
+    function startExperience() {
+        if (magicStarted) return;
+        magicStarted = true;
+        document.getElementById('start-controls').style.display = 'none';
+        
+        document.getElementById('bg-music').volume = 0.25;
+        document.getElementById('bg-music').play();
+        openingVoice.play();
+
+        // Subtitle Sync Logic
+        openingVoice.ontimeupdate = () => {
+            const currentTime = openingVoice.currentTime;
+            const activeSub = subtitles.findLast(s => currentTime >= s.time);
+            if (activeSub && listenText.innerText !== activeSub.text) {
+                listenText.style.opacity = '0';
+                setTimeout(() => {
+                    listenText.innerText = activeSub.text;
+                    listenText.style.opacity = '1';
+                }, 200);
+            }
+        };
+
+        openingVoice.onended = transitionToEnvelope;
+    }
+
+    // Rest of the logic remains the same...
+    function skipToMap() {
+        if (magicStarted) return;
+        magicStarted = true;
+        document.getElementById('bg-music').volume = 0.25;
+        document.getElementById('bg-music').play();
+        openingVoice.pause();
+        transitionToEnvelope();
+    }
+
+    function transitionToEnvelope() {
+        document.getElementById('intro-overlay').style.opacity = '0';
+        setTimeout(() => {
+            document.getElementById('intro-overlay').style.display = 'none';
+            document.getElementById('game-header').style.display = 'block';
+            document.getElementById('envelope-wrapper').style.display = 'block';
+            setTimeout(() => { 
+                document.getElementById('game-header').style.opacity = '1';
+                document.getElementById('envelope-wrapper').style.opacity = '1'; 
+            }, 50);
+        }, 800);
+    }
+
+    function openLetter() {
+        document.getElementById('envelope-wrapper').style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+        showQuestion();
+    }
+
+    // Questions and Storm Logic
+    const questions = [
+        { q: "A vast amphitheater where the voices resound... Named for the great leader who mastered the art of the word...", ans: "Anna Auditorium", audio: "annaaudi.mp3", distractors: ["Amphi Theatre", "Chanakya Hall"] },
+        { q: "A silent cathedral of parchment and ink... Guarded by turnstiles that demand a digital key...", ans: "Central Library", audio: "library.mp3", distractors: ["CDMM", "SJT"] },
+        { q: "The final boundary where the sentinels stand, between our sanctuary and the Muggle land...", ans: "Main Gate", audio: "maingate.mp3", distractors: ["SJT Back Gate", "Katpadi Tracks"] },
+        { q: "Beneath the hall where champions sweat... lies a subterranean vault hidden from the light.", ans: "All-Mart", audio: "ALLmart.mp3", distractors: ["Foodys", "Nescafe"] }
+    ];
+
+    const sharpMocks = [
+        { text: "Wrong. A Muggle could have guessed better.", file: "brains.mp3" },
+        { text: "Incorrect. Perhaps I should have sorted you into the 'Lost and Found'.", file: "lost%20and%20found.mp3" }
+    ];
+
+    let currentStep = 0;
+    const hatVoice = document.getElementById('hat-voice');
+    const thunder = document.getElementById('thunder-sound');
+
+    function showQuestion() {
+        const qData = questions[currentStep];
+        document.getElementById('q-text').innerText = qData.q;
+        hatVoice.src = qData.audio;
+        hatVoice.play();
+        
+        const optDiv = document.getElementById('options');
+        optDiv.innerHTML = '';
+        let choices = [qData.ans, ...qData.distractors].sort(() => Math.random() - 0.5);
+        
+        choices.forEach(choice => {
+            const b = document.createElement('button');
+            b.className = 'btn'; b.innerText = choice;
+            b.onclick = () => {
+                hatVoice.pause(); hatVoice.currentTime = 0;
+                if(choice === qData.ans) {
+                    currentStep++;
+                    if(currentStep < questions.length) {
+                        document.getElementById('hat-bubble').innerText = '"Correct. Next Trial..."';
+                        optDiv.innerHTML = ''; 
+                        setTimeout(showQuestion, 2000); 
+                    } else {
+                        document.getElementById('quiz-ui').classList.add('hidden');
+                        document.getElementById('result-ui').classList.remove('hidden');
+                        setTimeout(() => {
+                            document.body.classList.add('dark-bg');
+                            document.getElementById('main-container').classList.add('fade-mischief');
+                            document.getElementById('game-header').classList.add('fade-mischief');
+                        }, 2000);
+                        setTimeout(() => { window.location.href = "https://riviera.vit.ac.in/events/evt_f5838cb6d4de4e469b55ef9910deb062"; }, 5000);
+                    }
+                } else {
+                    const mock = sharpMocks[Math.floor(Math.random() * sharpMocks.length)];
+                    document.getElementById('hat-bubble').innerText = `"${mock.text}"`;
+                    hatVoice.src = mock.file; hatVoice.play();
+                }
+            };
+            optDiv.appendChild(b);
+        });
+    }
+
+    // Storm Engine
+    const canvas = document.getElementById('storm-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let raindrops = [];
+    for(let i = 0; i < 150; i++) { raindrops.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, l: Math.random()*25, v: Math.random()*15+15 }); }
+    function drawStorm() {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.strokeStyle = 'rgba(174,194,224,0.4)'; ctx.lineWidth = 1;
+        raindrops.forEach(r => {
+            ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x, r.y+r.l); ctx.stroke();
+            r.y += r.v; if(r.y > canvas.height) r.y = -20;
+        });
+        if(Math.random() > 0.97) {
+            ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            if(magicStarted) { thunder.volume = 0.3; thunder.currentTime = 0; thunder.play(); }
+        }
+        requestAnimationFrame(drawStorm);
+    }
+    drawStorm();
+    const wand = document.getElementById('wand-anchor');
+    document.addEventListener('mousemove', (e) => {
+        if(window.innerWidth > 768) {
+            wand.style.left = (e.clientX - 300) + 'px'; wand.style.top = (e.clientY - 6) + 'px';
+            const angle = Math.atan2(e.clientY - window.innerHeight / 2, e.clientX - window.innerWidth / 2);
+            wand.style.transform = `rotate(${angle}rad)`;
+        }
+    });
+</script>
+</body>
+</html>
